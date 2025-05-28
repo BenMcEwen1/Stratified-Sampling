@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 from sklearn.cluster import AgglomerativeClustering
+from scipy.spatial.distance import cdist
 
 
 class UncertaintyQuantification:
@@ -26,37 +27,51 @@ class UncertaintyQuantification:
         max_uncertainty = torch.max(uncertainty_scores, axis=1)[0]
         return max_uncertainty
     
-    def clusterEntropy(self, confidence_scores:torch.tensor) -> list:
+    def clusterEntropy(self, confidence_scores:torch.tensor, subsample:float = 0.1) -> list:
         """
         Compute the Hierachical Agglomerative Clustering for the training embeddings.
 
         Args:
             confidence (tensor): Tensor containing confidence scores of all embeddings.
+            subsample (float): Percentage of embeddings to use for cluster generation. Defaults to 0.1. Other samples with be assigned.
         Returns:
             list: List of selected indices.
         """
 
         if self.clusters is None:
+            print("Generating clusters... ", end="", flush=True)
+            subset = self.x[np.random.choice(self.x.shape[0], int(subsample*self.x.shape[0]), replace=False)]
             agglomerativeClustering = AgglomerativeClustering(n_clusters=self.samples_num, distance_threshold=None, linkage='ward')
-            self.clusters = agglomerativeClustering.fit_predict(self.x)
+            clusters_indices = agglomerativeClustering.fit_predict(subset)
+
+            # Compute cluster centroids
+            unique_clusters = np.unique(clusters_indices)
+            cluster_centroids = np.array([subset[clusters_indices == c].mean(axis=0) for c in unique_clusters])
+
+            # Assign to clusters by comparing distance to cluster centroids
+            distances = cdist(self.x, cluster_centroids)
+            assigned_clusters = np.argmin(distances, axis=1)
+
+            self.clusters = {}
+            for cluster_idx in range(max(clusters_indices)+1):
+                indices = np.where(assigned_clusters == cluster_idx)[0]
+                self.clusters[cluster_idx] = indices
+            print("Done")
 
         clusters_scores = {}
-        clusters_indices = {}
-        for cluster_idx in range(max(self.clusters)+1):
-            indices = np.where(self.clusters == cluster_idx)[0]
-            scores = self.binaryEntropy(confidence_scores[indices])
+        for cluster_idx, cluster_indices in self.clusters.items():
+            scores = self.binaryEntropy(confidence_scores[cluster_indices])
             clusters_scores[cluster_idx] = scores
-            clusters_indices[cluster_idx] = list(indices)
 
         selected = []
         for cluster_idx, scores in clusters_scores.items():
-            if len(clusters_indices[cluster_idx]) > 0:
-                idx = torch.argmax(scores).item()
-                selected.append(clusters_indices[cluster_idx][idx])
-                clusters_scores[cluster_idx][idx] = 0
+            idx = torch.argmax(scores).item()
+            selected.append(self.clusters[cluster_idx][idx])
+            clusters_scores[cluster_idx][idx] = 0
 
             if len(selected) >= self.samples_num:
                 break
+
         return selected
     
     def stratified(self, model, sorted_indices: dict, method="binary", indices=None):

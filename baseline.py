@@ -108,12 +108,12 @@ tensor_y_test = torch.tensor(y_true_test)
 test_filenames = samples_df_test["File"]
 
 
-# from adapter import loader
+from adapter import loader
 
-# DATASET_PATH = "anuraset"
+DATASET_PATH = "anuraset"
 
-# tensor_x_train, tensor_y_train, train_filenames = loader(DATASET_PATH, sub_directory="train")
-# tensor_x_test, tensor_y_test, test_filenames = loader(DATASET_PATH, sub_directory="test")
+tensor_x_train, tensor_y_train, train_filenames = loader(DATASET_PATH, sub_directory="train")
+tensor_x_test, tensor_y_test, test_filenames = loader(DATASET_PATH, sub_directory="test")
 
 # print(tensor_y_train.sum(axis=0))
 common = tensor_y_train.sum(axis=0) > 5000
@@ -136,9 +136,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 # --- Config ---
 NUM_CLASSES = train_labels.shape[1]
-INIT_SIZE = 20
+INIT_SIZE = 100
 BATCH_SIZE = 32
-AL_EPOCHS = 10
+AL_EPOCHS = 25
 QUERY_SIZE = 20
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -209,8 +209,8 @@ def active_learning_loop(strategy='random'):
         # Evaluate
         mAP, cmAP, F1_macro = evaluate(model, val_embeddings, val_labels)
         print(f"[{strategy}] Epoch {epoch+1} | mAP: {mAP:.4f} cmAP: {cmAP:.4f} | F1 Macro: {F1_macro:.4f}  | Labeled: {len(labeled_idx)}")
-        results.append(mAP)
-        scheduler.step(mAP)
+        results.append(F1_macro)
+        scheduler.step(F1_macro)
 
         if len(unlabeled_idx) == 0:
             break  # no more to query
@@ -228,7 +228,6 @@ def active_learning_loop(strategy='random'):
 
         topk = torch.topk(scores, k=min(QUERY_SIZE, len(unlabeled_idx))).indices.cpu().numpy()
         new_indices = [unlabeled_idx[i] for i in topk]
-        # print(new_indices)
 
         # Accumulate
         labeled_idx.extend(new_indices)
@@ -240,11 +239,11 @@ def active_learning_loop(strategy='random'):
     return results
 
 mAP_random = active_learning_loop(strategy='random')
-# mAP_binary = active_learning_loop(strategy='binary')
+mAP_binary = active_learning_loop(strategy='binary')
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
-# plt.plot(mAP_random, label='random')
-# plt.plot(mAP_binary, label='binary')
-# plt.legend()
-# plt.show()
+plt.plot(mAP_random, label='random')
+plt.plot(mAP_binary, label='binary')
+plt.legend()
+plt.show()
