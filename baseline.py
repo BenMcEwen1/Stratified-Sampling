@@ -108,12 +108,12 @@ tensor_y_test = torch.tensor(y_true_test)
 test_filenames = samples_df_test["File"]
 
 
-from adapter import loader
+# from adapter import loader
 
-DATASET_PATH = "anuraset"
+# DATASET_PATH = "anuraset"
 
-tensor_x_train, tensor_y_train, train_filenames = loader(DATASET_PATH, sub_directory="train")
-tensor_x_test, tensor_y_test, test_filenames = loader(DATASET_PATH, sub_directory="test")
+# tensor_x_train, tensor_y_train, train_filenames = loader(DATASET_PATH, sub_directory="train")
+# tensor_x_test, tensor_y_test, test_filenames = loader(DATASET_PATH, sub_directory="test")
 
 # print(tensor_y_train.sum(axis=0))
 common = tensor_y_train.sum(axis=0) > 5000
@@ -138,7 +138,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 NUM_CLASSES = train_labels.shape[1]
 INIT_SIZE = 100
 BATCH_SIZE = 32
-AL_EPOCHS = 25
+AL_EPOCHS = 100
 QUERY_SIZE = 20
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 

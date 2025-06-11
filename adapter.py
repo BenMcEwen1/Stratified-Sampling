@@ -18,7 +18,6 @@ train_df = pd.read_csv("train/train_set.csv")
 import pandas as pd
 import torch
 
-DATASET_PATH = "anuraset"
 
 def loader(DATASET_PATH, sub_directory="train"):
     embeddings = torch.load(f"{DATASET_PATH}/{sub_directory}/embeddings.pt", weights_only=True)

@@ -27,7 +27,7 @@ class UncertaintyQuantification:
         max_uncertainty = torch.max(uncertainty_scores, axis=1)[0]
         return max_uncertainty
     
-    def clusterEntropy(self, confidence_scores:torch.tensor, subsample:float = 0.1) -> list:
+    def clusterEntropy(self, confidence_scores:torch.tensor, subsample:float = 0.2) -> list:
         """
         Compute the Hierachical Agglomerative Clustering for the training embeddings.
 

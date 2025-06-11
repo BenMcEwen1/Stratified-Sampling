@@ -1,4 +1,8 @@
 WABAD/
 BirdNet/
 AnuraSet/
+extracted/
 __pycache__
+
+*.wav
+*.mp3
