@@ -138,7 +138,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 NUM_CLASSES = train_labels.shape[1]
 INIT_SIZE = 100
 BATCH_SIZE = 32
-AL_EPOCHS = 100
+AL_EPOCHS = 50
 QUERY_SIZE = 20
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -209,8 +209,8 @@ def active_learning_loop(strategy='random'):
         # Evaluate
         mAP, cmAP, F1_macro = evaluate(model, val_embeddings, val_labels)
         print(f"[{strategy}] Epoch {epoch+1} | mAP: {mAP:.4f} cmAP: {cmAP:.4f} | F1 Macro: {F1_macro:.4f}  | Labeled: {len(labeled_idx)}")
-        results.append(F1_macro)
-        scheduler.step(F1_macro)
+        results.append(mAP)
+        scheduler.step(mAP)
 
         if len(unlabeled_idx) == 0:
             break  # no more to query

@@ -71,10 +71,9 @@ class UncertaintyQuantification:
 
             if len(selected) >= self.samples_num:
                 break
-
         return selected
     
-    def stratified(self, model, sorted_indices: dict, method="binary", indices=None):
+    def stratified(self, model, sorted_indices: dict, method="binary", indices=None, weights=None):
         """
         Perform stratified sampling according to the strata given in the input.
 
@@ -90,17 +89,26 @@ class UncertaintyQuantification:
 
         sorted_embeddings = {key: self.x[idx] for key, idx in sorted_indices.items()}
         strata_idx = {}
-        for key, v in sorted_embeddings.items():
+
+        # Compute per stratum sample count
+        n_samples = self.samples_num // len(sorted_embeddings.keys())
+        print(weights)
+        if weights is not None:
+            weighted_samples = torch.multiply(weights, self.samples_num)
+            
+
+        for j, (key, v) in enumerate(sorted_embeddings.items()):
+            if weights is not None:
+                n_samples = torch.ceil(weighted_samples[j])
 
             if indices:
                 selected = [i for i, val in enumerate(sorted_indices[key]) if val in indices]
             else:
                 selected = None
         
-            idx = self.resample(model, embeddings=v, method=method, indices=selected) # Provides local indices (per strata)
+            idx = self.resample(model, embeddings=v, method=method, indices=selected, override=int(n_samples)) # Provides local indices (per strata)
             mapped = list(np.array(sorted_indices[key])[idx])
             strata_idx[key] = mapped
-
         return strata_idx
 
     def resample(self, model, method="random", embeddings=None, indices=None, removal=True, override:int=None):
