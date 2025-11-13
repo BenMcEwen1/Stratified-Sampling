@@ -1,3 +1,16 @@
+"""
+Stratified Active Learning Sampling Module
+
+This module implements uncertainty quantification and stratified sampling methods
+for active learning in multi-label classification tasks.
+
+Key Features:
+    - Multiple uncertainty measures (binary entropy, ratio max, clustering)
+    - Stratified sampling with optional weighting
+    - Hierarchical agglomerative clustering
+    - Support for removal and accumulation strategies
+"""
+
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,6 +20,19 @@ from scipy.spatial.distance import cdist
 
 
 class UncertaintyQuantification:
+    """
+    A class for uncertainty quantification and stratified sampling in active learning.
+
+    This class provides methods for computing uncertainty scores and selecting
+    samples using various strategies including stratified sampling across predefined
+    strata (e.g., spatial, temporal, or species-based).
+
+    Attributes:
+        samples_num (int): Number of samples to select in each sampling round
+        clusters (dict): Cached cluster assignments for cluster-based sampling
+        x (torch.Tensor): Feature embeddings of shape (N, D)
+        y (torch.Tensor): Labels of shape (N, C) for multi-label classification
+    """
     def __init__(self, x: torch.Tensor, y: torch.Tensor, samples_num: int):
         self.samples_num = samples_num
         self.clusters = None
@@ -15,27 +41,55 @@ class UncertaintyQuantification:
 
     def binaryEntropy(self, outputs: torch.Tensor, eps=1e-8) -> torch.Tensor:
         """
-        Compute the maximum binary entropy across all classes
+        Compute the maximum binary entropy across all classes for multi-label classification.
+
+        For each sample, computes binary entropy for each class and returns the maximum,
+        which represents the most uncertain prediction for that sample.
+
+        Args:
+            outputs (torch.Tensor): Model predictions (probabilities) of shape (N, C)
+            eps (float): Small constant for numerical stability
+
+        Returns:
+            torch.Tensor: Maximum entropy per sample, shape (N,)
         """
         entropy = -(outputs * torch.log2(outputs + eps) + (1 - outputs) * torch.log2(1 - outputs + eps))
         entropy = torch.nan_to_num(entropy) 
         per_sample_entropy = torch.max(entropy, axis=1)[0] 
         return per_sample_entropy
         
-    def ratioMax(self, outputs:torch.tensor):
+    def ratioMax(self, outputs: torch.Tensor):
+        """
+        Compute ratio-based uncertainty score for multi-label classification.
+
+        This method quantifies uncertainty based on the distance from the decision
+        boundary (0.5). Predictions closer to 0.5 have higher uncertainty.
+
+        Args:
+            outputs (torch.Tensor): Model predictions (probabilities) of shape (N, C)
+
+        Returns:
+            torch.Tensor: Maximum uncertainty per sample, shape (N,)
+        """
         uncertainty_scores = (0.5 - torch.abs(outputs - 0.5)) / (0.5 + torch.abs(outputs - 0.5))
         max_uncertainty = torch.max(uncertainty_scores, axis=1)[0]
         return max_uncertainty
     
-    def clusterEntropy(self, confidence_scores:torch.tensor, subsample:float = 0.2) -> list:
+    def clusterEntropy(self, confidence_scores: torch.Tensor, subsample: float = 0.2) -> list:
         """
-        Compute the Hierachical Agglomerative Clustering for the training embeddings.
+        Perform cluster-based sampling using hierarchical agglomerative clustering.
+
+        This method:
+        1. Clusters a subset of embeddings using hierarchical clustering
+        2. Assigns all samples to nearest cluster centroids
+        3. Selects the most uncertain sample from each cluster
 
         Args:
-            confidence (tensor): Tensor containing confidence scores of all embeddings.
-            subsample (float): Percentage of embeddings to use for cluster generation. Defaults to 0.1. Other samples with be assigned.
+            confidence_scores (torch.Tensor): Model confidence scores for all samples
+            subsample (float): Fraction of samples to use for initial clustering (0.0-1.0)
+
         Returns:
-            list: List of selected indices.
+            list: Indices of selected samples (one per cluster)
         """
 
         if self.clusters is None:
@@ -89,10 +143,15 @@ class UncertaintyQuantification:
 
         sorted_embeddings = {key: self.x[idx] for key, idx in sorted_indices.items()}
         strata_idx = {}
+        # print("sorted_embeddings", sorted_embeddings)
 
         # Compute per stratum sample count
         n_samples = self.samples_num // len(sorted_embeddings.keys())
-        print(weights)
+        if self.samples_num < len(sorted_embeddings.keys()):
+            raise Exception("The number of strata exceeds the number of total samples, increase n_samples.")
+        # print("n_samples", n_samples)
+
+        # print(weights)
         if weights is not None:
             weighted_samples = torch.multiply(weights, self.samples_num)
             
@@ -105,6 +164,7 @@ class UncertaintyQuantification:
                 selected = [i for i, val in enumerate(sorted_indices[key]) if val in indices]
             else:
                 selected = None
+            # print("selected", selected)
         
             idx = self.resample(model, embeddings=v, method=method, indices=selected, override=int(n_samples)) # Provides local indices (per strata)
             mapped = list(np.array(sorted_indices[key])[idx])
@@ -152,7 +212,7 @@ class UncertaintyQuantification:
         
         # Return top k uncertain samples
         if indices:
-            scores[indices] = 0
+            scores[indices] = -float('inf')
 
         if len(scores) > samples_num:
             _, idx = torch.topk(scores, k=samples_num)
