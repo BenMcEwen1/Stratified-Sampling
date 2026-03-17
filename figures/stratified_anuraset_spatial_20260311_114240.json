@@ -1,0 +1,32 @@
+{
+  "label": "stratified",
+  "dataset": "anuraset",
+  "strata_mode": "spatial",
+  "metric": "F1 (macro)",
+  "n_samples": 20,
+  "num_epochs": 25,
+  "strata": [
+    "INCT20955",
+    "INCT4",
+    "INCT41",
+    "INCT17"
+  ],
+  "strata_mean": [
+    0.6060209274291992,
+    0.3946938216686249,
+    0.4670746922492981,
+    0.5208892822265625
+  ],
+  "strata_var": [
+    0.02218598499894142,
+    0.0357939749956131,
+    0.01971076801419258,
+    0.027270441874861717
+  ],
+  "selected_counts": {
+    "INCT20955": 125,
+    "INCT4": 125,
+    "INCT41": 125,
+    "INCT17": 125
+  }
+}

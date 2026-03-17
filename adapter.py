@@ -61,6 +61,7 @@ def _load_anuraset(dataset_path, sub_directory):
     filenames = df['fname'].to_list()
     return embeddings, labels, filenames
 
+# data_files/ 
 
 def _load_wabad(dataset_path, sub_directory):
     """Load WABAD dataset from pickle files."""
@@ -74,6 +75,7 @@ def _load_wabad(dataset_path, sub_directory):
 
     wabad_dir = dir_map.get(sub_directory, sub_directory)
     data_files_path = os.path.join(dataset_path, "data_files")
+    print(wabad_dir)
 
     # Load dataframe and scores
     dataframe_file = os.path.join(data_files_path, f"dataframe_{wabad_dir}.pkl")

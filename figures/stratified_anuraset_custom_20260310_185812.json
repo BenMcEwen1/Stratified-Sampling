@@ -1,0 +1,28 @@
+{
+  "label": "stratified",
+  "dataset": "anuraset",
+  "strata_mode": "custom",
+  "metric": "F1 (macro)",
+  "n_samples": 20,
+  "num_epochs": 25,
+  "strata": [
+    "A",
+    "B",
+    "C"
+  ],
+  "strata_mean": [
+    0.6835800409317017,
+    0.4855242371559143,
+    0.5159177780151367
+  ],
+  "strata_var": [
+    0.04000293090939522,
+    0.017671555280685425,
+    0.012660262174904346
+  ],
+  "selected_counts": {
+    "A": 150,
+    "B": 150,
+    "C": 150
+  }
+}

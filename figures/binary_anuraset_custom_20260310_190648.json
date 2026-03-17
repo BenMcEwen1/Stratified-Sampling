@@ -1,0 +1,28 @@
+{
+  "label": "binary",
+  "dataset": "anuraset",
+  "strata_mode": "custom",
+  "metric": "F1 (macro)",
+  "n_samples": 20,
+  "num_epochs": 25,
+  "strata": [
+    "A",
+    "B",
+    "C"
+  ],
+  "strata_mean": [
+    0.6514159440994263,
+    0.49544018507003784,
+    0.4978836178779602
+  ],
+  "strata_var": [
+    0.04840671643614769,
+    0.026035232469439507,
+    0.03241879492998123
+  ],
+  "selected_counts": {
+    "A": 106,
+    "B": 307,
+    "C": 87
+  }
+}

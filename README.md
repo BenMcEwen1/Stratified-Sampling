@@ -40,17 +40,6 @@ cd Stratified-Sampling
 pip install -r requirements.txt
 ```
 
-## Requirements
-
-- Python 3.8+
-- PyTorch 2.2.1
-- NumPy 1.26.3
-- Pandas 2.2.2
-- scikit-learn (via scipy)
-- Matplotlib 3.9.2
-- Seaborn 0.13.2
-- tqdm 4.66.3
-
 ## Core Modules
 
 ### `sampling.py` - Uncertainty Quantification
@@ -126,22 +115,23 @@ embeddings, labels, filenames = loader(
 )
 ```
 
-**Dataset Structure Requirements:**
+## Datasets
 
-For **AnuraSet**:
-```
-anuraset/
-├── train/
-│   ├── embeddings.pt
-│   ├── labels.pt
-│   └── data.csv
-└── test/
-    ├── embeddings.pt
-    ├── labels.pt
-    └── data.csv
-```
+This project supports two bioacoustic datasets through the `adapter.py` loader.
 
-For **WABAD**:
+### WABAD (World Annotated Bird Acoustic Dataset)
+
+The original dataset has been segmented and BirdNET embeddings pre-computed. This curated dataset with custom train (40%), val (10%) and test (50%) splits is available [here](https://zenodo.org/records/19064409).
+
+**Dataset Statistics:**
+- **Training samples**: 13,453 embeddings (1024-dim BirdNET embeddings)
+- **Validation samples**: Available
+- **Test samples**: 16,123 embeddings
+- **Species**: 106 bird species (filtered from 6,000+ BirdNet classes)
+- **Locations**: 26 recording sites across various habitats
+- **Temporal span**: Multiple years (2016-2023)
+
+**Expected Directory Structure:**
 ```
 WABAD/
 └── data_files/
@@ -153,6 +143,31 @@ WABAD/
     ├── dataframe_validation.pkl
     └── BirdNET_GLOBAL_6K_V2.4_Labels.txt
 ```
+
+### AnuraSet
+
+Anuran (frog) call classification [dataset](https://zenodo.org/records/8342596) for amphibian bioacoustic monitoring. The same train, val, test split is used 
+
+**Dataset Statistics:**
+- **Training samples**: 62,191 embeddings (1024-dim)
+- **Test samples**: 31,187 embeddings
+- **Species**: 42 anuran species
+- **Locations**: Multiple recording sites
+- **Audio type**: Frog calls and vocalizations
+
+**Expected Directory Structure:**
+```
+anuraset/
+├── train/
+│   ├── embeddings.pt      # Torch tensor of embeddings
+│   ├── labels.pt          # Torch tensor of labels
+│   └── data.csv           # Metadata with 'fname' column
+└── test/
+    ├── embeddings.pt
+    ├── labels.pt
+    └── data.csv
+```
+
 
 ## Notebooks
 
@@ -209,73 +224,4 @@ sorted_indices_temporal = temporal_split(train_filenames, res=6)  # YYYYMM
 # Custom temporal periods
 sorted_indices_custom = temporal_custom(train_filenames)
 # Returns: {'A': [...], 'B': [...], 'C': [...]}
-```
-
-### Uncertainty Measures
-
-**Binary Entropy** (primary method):
-```python
-entropy = -(p * log(p) + (1-p) * log(1-p))
-uncertainty = max(entropy across classes)
-```
-
-**Ratio Max**:
-```python
-uncertainty = (0.5 - |p - 0.5|) / (0.5 + |p - 0.5|)
-```
-
-**Cluster-based**: Hierarchical clustering with within-cluster entropy maximization
-
-## Datasets
-
-This project supports two bioacoustic datasets through the unified `adapter.py` loader.
-
-### WABAD (World Annotated Bird Acoustic Dataset)
-
-Bird species classification dataset with rich spatial and temporal metadata.
-
-**Dataset Statistics:**
-- **Training samples**: 13,453 embeddings (1024-dim BirdNet embeddings)
-- **Validation samples**: Available
-- **Test samples**: 16,123 embeddings
-- **Species**: 106 bird species (filtered from 6,000+ BirdNet classes)
-- **Locations**: 26 recording sites across various habitats
-- **Temporal span**: Multiple years (2016-2023)
-
-**Expected Directory Structure:**
-```
-WABAD/
-└── data_files/
-    ├── embeddings_train.pkl
-    ├── embeddings_test.pkl
-    ├── embeddings_validation.pkl
-    ├── dataframe_train.pkl
-    ├── dataframe_test.pkl
-    ├── dataframe_validation.pkl
-    └── BirdNET_GLOBAL_6K_V2.4_Labels.txt
-```
-
-### AnuraSet
-
-Anuran (frog) call classification dataset for amphibian bioacoustic monitoring.
-
-**Dataset Statistics:**
-- **Training samples**: 62,191 embeddings (1024-dim)
-- **Test samples**: 31,187 embeddings
-- **Species**: 42 anuran species
-- **Locations**: Multiple recording sites
-- **Audio type**: Frog calls and vocalizations
-
-
-**Expected Directory Structure:**
-```
-anuraset/
-├── train/
-│   ├── embeddings.pt      # Torch tensor of embeddings
-│   ├── labels.pt          # Torch tensor of labels
-│   └── data.csv           # Metadata with 'fname' column
-└── test/
-    ├── embeddings.pt
-    ├── labels.pt
-    └── data.csv
 ```

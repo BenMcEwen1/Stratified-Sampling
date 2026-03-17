@@ -1,0 +1,32 @@
+{
+  "label": "cluster",
+  "dataset": "anuraset",
+  "strata_mode": "spatial",
+  "metric": "F1 (macro)",
+  "n_samples": 25,
+  "num_epochs": 20,
+  "strata": [
+    "INCT20955",
+    "INCT4",
+    "INCT41",
+    "INCT17"
+  ],
+  "strata_mean": [
+    0.49797606468200684,
+    0.2827887237071991,
+    0.3638821840286255,
+    0.4466896653175354
+  ],
+  "strata_var": [
+    0.04817165434360504,
+    0.055496107786893845,
+    0.07610365748405457,
+    0.03505246713757515
+  ],
+  "selected_counts": {
+    "INCT20955": 141,
+    "INCT4": 103,
+    "INCT41": 70,
+    "INCT17": 159
+  }
+}
